@@ -10,17 +10,26 @@ export async function fetchContent(): Promise<Content> {
   const c = (await res.json()) as Content;
   // defensive defaults so a missing field never crashes the app
   c.sessions ??= []; c.questions ??= []; c.shorts ??= []; c.cases ??= []; c.tips ??= {};
-  c.questions = c.questions.filter((q) => q && Array.isArray(q.options) && q.options.length >= 2 && typeof q.answer === "number").map((q) => ({ ...q, trap: q.trap ?? null, tags: q.tags ?? [], difficulty: q.difficulty ?? "medium", kind: q.kind ?? "" }));
+  c.top30 ??= []; c.recall ??= RECALL_LISTS; c.mock ??= { timing: "", mcq: [], short: [] }; c.mock.mcq ??= []; c.mock.short ??= [];
+  c.questions = c.questions.filter((q) => q && Array.isArray(q.options) && q.options.length >= 2 && typeof q.answer === "number").map((q) => ({ ...q, trap: q.trap ?? null, tags: q.tags ?? [], difficulty: q.difficulty ?? "medium", kind: q.kind ?? "", score: typeof q.score === "number" ? q.score : 10, tip: q.tip ?? null }));
+  c.shorts = c.shorts.filter((s) => s && s.stem).map((s) => ({ ...s, marking: s.marking ?? s.points ?? [], model: s.model ?? "", minimum: s.minimum ?? "", tags: s.tags ?? [], score: typeof s.score === "number" ? s.score : 8 }));
   return c;
 }
 
 export function shuffle<T>(arr: T[], rnd: () => number = Math.random): T[] { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-/** Shuffle options while keeping `answer` pointed at the correct text. */
+export const NOTA = /^none of the above\.?$/i;
+/** Shuffle options while keeping `answer` pointed at the correct text; a "None of the above" option always stays last. */
 export function shuffleOptions(q: MCQ): MCQ {
-  const idx = shuffle(q.options.map((_, i) => i));
+  const nota = q.options.findIndex((o) => NOTA.test(o.trim()));
+  const movable = q.options.map((_, i) => i).filter((i) => i !== nota);
+  const idx = shuffle(movable); if (nota >= 0) idx.push(nota);
   return { ...q, options: idx.map((i) => q.options[i]), answer: idx.indexOf(q.answer) };
 }
+/** Professor-style items first (tag "osinga-style"), then by probability score. */
+export function isOsinga(q: { tags?: string[] }): boolean { return (q.tags ?? []).includes("osinga-style"); }
+export function byScore<T extends { score?: number }>(a: T, b: T): number { return (b.score ?? 0) - (a.score ?? 0); }
+export function filterStyle<T extends { tags?: string[] }>(items: T[], osingaOnly: boolean): T[] { if (!osingaOnly) return items; const o = items.filter(isOsinga); return o.length ? o : items; }
 
 export const FAMILY_HEX: Record<string, string> = { strategy: "#1E2761", promotion: "#C2410C", price: "#1B7A5A", service: "#0E7490", analytics: "#5B21B6", risk: "#B42318", project: "#7C5E10" };
 export function sessionColour(c: Content, id: string): string { const s = c.sessions.find((x) => x.id === id); return s ? `#${s.colour}` : "#334155"; }

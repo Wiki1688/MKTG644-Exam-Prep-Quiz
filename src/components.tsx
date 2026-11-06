@@ -65,6 +65,7 @@ export function QuestionCard({ q, index, total, onAnswer, onNext, flagged, onFla
     <motion.div key={q.id} initial={{ opacity: 0, x: rm ? 0 : 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: rm ? 0 : -24 }} transition={{ duration: 0.3 }} className="card p-5">
       <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
         <SessionChip id={q.session} /> <Diff d={q.difficulty} />
+        {typeof q.score === "number" && q.tags?.includes("osinga-style") && <span className="chip bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-100" title="Probability of being tested (max 25)">🎯 {q.score}</span>}
         <span className="ml-auto">{index + 1} / {total}</span>
         <button onClick={onFlag} aria-pressed={flagged} aria-label={flagged ? "Unflag question" : "Flag question to revisit"} className={`btn-ghost !min-h-[36px] !px-3 ${flagged ? "!bg-amber-200 !text-amber-900 dark:!bg-amber-600 dark:!text-white" : ""}`}>{flagged ? "★ Flagged" : "☆ Flag"}</button>
       </div>
@@ -89,6 +90,7 @@ export function QuestionCard({ q, index, total, onAnswer, onNext, flagged, onFla
             <strong>{picked === q.answer ? "Correct. " : "Not quite. "}</strong>{q.explanation}
           </div>
           {q.trap && <div className="rounded-xl bg-amber-50 p-3 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100"><strong>⚠️ Trap:</strong> {q.trap}</div>}
+          {q.tip && <div className="rounded-xl bg-sky-50 p-3 text-sky-900 dark:bg-sky-900/30 dark:text-sky-100"><strong>Tip:</strong> {q.tip}</div>}
           <div className="text-xs text-slate-500">Source: {q.source}</div>
         </motion.div>
       )}

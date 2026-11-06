@@ -18,7 +18,7 @@ export default defineConfig({
         start_url: "./",
         icons: [{ src: "icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any maskable" }],
       },
-      workbox: { globPatterns: ["**/*.{js,css,html,svg,json}"] },
+      workbox: { globPatterns: ["**/*.{js,css,html,svg,json}"], cacheId: "mktg644-quiz-v2", cleanupOutdatedCaches: true },
     }),
   ],
   base: "./",

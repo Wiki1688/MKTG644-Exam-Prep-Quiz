@@ -4,7 +4,7 @@ import { HashRouter, Link, NavLink, Route, Routes, useLocation } from "react-rou
 import { ContentCtx, fetchContent } from "./lib/content";
 import { useStore } from "./lib/store";
 import type { Content } from "./lib/types";
-import { Cases, Checklist, Home, Mock, PrintView, RandomRun, RandomSetup, Review, Settings, Shorts, Stats, StudyIndex, StudySession, Welcome } from "./pages";
+import { Cases, Checklist, Home, Mock, PaperMock, PrintView, RandomRun, RandomSetup, Review, Settings, Shorts, Stats, StudyIndex, StudySession, Top30, Welcome } from "./pages";
 
 function NameGate({ onCreate }: { onCreate: (name: string) => void }) {
   const [n, setN] = useState("");
@@ -27,7 +27,7 @@ function Shell({ children, store }: { children: React.ReactNode; store: ReturnTy
   const loc = useLocation(); const p = store.profile;
   const dark = p?.settings.dark ?? window.matchMedia?.("(prefers-color-scheme: dark)").matches;
   useEffect(() => { document.documentElement.classList.toggle("dark", !!dark); }, [dark]);
-  const tabs = [["/", "Home"], ["/study", "Study"], ["/random", "Random"], ["/review", "Review"], ["/stats", "Stats"], ["/settings", "Settings"]];
+  const tabs = [["/", "Home"], ["/study", "Study"], ["/top30", "Cards"], ["/papermock", "Mock"], ["/review", "Review"], ["/settings", "Settings"]];
   return (
     <div className="min-h-screen pb-24 sm:pb-6">
       <header className="no-print sticky top-0 z-10 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
@@ -63,11 +63,13 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Home store={store} />} />
                 <Route path="/welcome" element={<Welcome />} />
-                <Route path="/study" element={<StudyIndex />} />
+                <Route path="/study" element={<StudyIndex store={store} />} />
                 <Route path="/study/:id" element={<StudySession store={store} />} />
-                <Route path="/random" element={<RandomSetup />} />
+                <Route path="/random" element={<RandomSetup store={store} />} />
                 <Route path="/random/go" element={<RandomRun store={store} />} />
                 <Route path="/mock" element={<Mock store={store} />} />
+                <Route path="/papermock" element={<PaperMock store={store} />} />
+                <Route path="/top30" element={<Top30 store={store} />} />
                 <Route path="/shorts" element={<Shorts store={store} />} />
                 <Route path="/cases" element={<Cases />} />
                 <Route path="/review" element={<Review store={store} />} />

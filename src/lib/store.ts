@@ -2,16 +2,16 @@ import { useCallback, useEffect, useState } from "react";
 import type { Attempt, Profile, Store } from "./types";
 
 const KEY = "mktg644-quiz-store";
-export const STORE_VERSION = 2;
+export const STORE_VERSION = 3;
 
 function safeGet(): string | null { try { return localStorage.getItem(KEY); } catch { return null; } }
 function safeSet(v: string) { try { localStorage.setItem(KEY, v); } catch { /* ignore */ } }
 
 export function newProfile(name: string): Profile {
-  return { id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`, name: name.trim() || "Student", createdAt: Date.now(), attempts: [], flags: [], shortGrades: {}, bestStreak: 0, mocks: [], settings: { dark: false, reduceMotion: false } };
+  return { id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`, name: name.trim() || "Student", createdAt: Date.now(), attempts: [], flags: [], shortGrades: {}, bestStreak: 0, mocks: [], cardStatus: {}, paperMocks: [], settings: { dark: false, reduceMotion: false, osingaOnly: true } };
 }
 
-/** Migrate older schemas forward. v1 had `wrong: string[]` instead of attempts; v2 = current. */
+/** Migrate older schemas forward. v1 had `wrong: string[]` instead of attempts; v2 added attempts/mocks; v3 adds cardStatus, paperMocks and the osingaOnly setting. */
 export function migrate(raw: unknown): Store {
   const empty: Store = { version: STORE_VERSION, activeProfileId: null, profiles: [] };
   if (!raw || typeof raw !== "object") return empty;
@@ -20,7 +20,7 @@ export function migrate(raw: unknown): Store {
   const migrated: Profile[] = profiles.map((p: Partial<Profile> & { wrong?: string[] }) => {
     const base = newProfile(p.name ?? "Student");
     const attempts: Attempt[] = Array.isArray(p.attempts) ? p.attempts : (p.wrong ?? []).map((qid) => ({ qid, correct: false, chosen: -1, at: p.createdAt ?? Date.now(), mode: "legacy" }));
-    return { ...base, ...p, id: p.id ?? base.id, attempts, flags: Array.isArray(p.flags) ? p.flags : [], shortGrades: p.shortGrades ?? {}, bestStreak: p.bestStreak ?? 0, mocks: Array.isArray(p.mocks) ? p.mocks : [], settings: { ...base.settings, ...(p.settings ?? {}) } };
+    return { ...base, ...p, id: p.id ?? base.id, attempts, flags: Array.isArray(p.flags) ? p.flags : [], shortGrades: p.shortGrades ?? {}, bestStreak: p.bestStreak ?? 0, mocks: Array.isArray(p.mocks) ? p.mocks : [], cardStatus: p.cardStatus ?? {}, paperMocks: Array.isArray(p.paperMocks) ? p.paperMocks : [], settings: { ...base.settings, ...(p.settings ?? {}) } };
   });
   const active = migrated.some((p) => p.id === s.activeProfileId) ? (s.activeProfileId as string) : migrated[0]?.id ?? null;
   return { version: STORE_VERSION, activeProfileId: active, profiles: migrated };
@@ -57,8 +57,10 @@ export function useStore() {
     toggleFlag: (qid: string) => update((p) => ({ ...p, flags: p.flags.includes(qid) ? p.flags.filter((x) => x !== qid) : [...p.flags, qid] })),
     gradeShort: (id: string, g: number) => update((p) => ({ ...p, shortGrades: { ...p.shortGrades, [id]: g } })),
     recordMock: (m: Profile["mocks"][number]) => update((p) => ({ ...p, mocks: [...p.mocks, m] })),
+    recordPaperMock: (m: Profile["paperMocks"][number]) => update((p) => ({ ...p, paperMocks: [...p.paperMocks, m] })),
+    setCard: (id: string, st: "know" | "revisit" | null) => update((p) => { const cardStatus = { ...p.cardStatus }; if (st) cardStatus[id] = st; else delete cardStatus[id]; return { ...p, cardStatus }; }),
     setSettings: (s: Partial<Profile["settings"]>) => update((p) => ({ ...p, settings: { ...p.settings, ...s } })),
-    resetProgress: () => update((p) => ({ ...p, attempts: [], flags: [], shortGrades: {}, bestStreak: 0, mocks: [] })),
+    resetProgress: () => update((p) => ({ ...p, attempts: [], flags: [], shortGrades: {}, bestStreak: 0, mocks: [], cardStatus: {}, paperMocks: [] })),
     exportProfile: (): string => JSON.stringify({ version: STORE_VERSION, profile }, null, 0),
     importProfile: (text: string): string | null => {
       try {

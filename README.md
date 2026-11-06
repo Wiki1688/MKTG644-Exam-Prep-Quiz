@@ -4,6 +4,30 @@ A mobile-first practice app for MKTG644 AI-Powered Marketing (SMU MBAI, Prof. Er
 
 Stack: Vite 6 · React 18 · TypeScript · Tailwind 3 · Framer Motion · canvas-confetti · vite-plugin-pwa · react-router (HashRouter, so it works on any static host).
 
+
+## What's new in v2 (6 Nov 2026)
+
+- **Session 10 (Agentic Marketing Workflows)** added across Study, Random, Review, Shorts, Cases and Stats (family colour purple).
+- **Content schema v2** (`public/content/questions.json`): every question carries a 🎯 probability score (1–25) and a `tags` entry of `osinga-style` (written in the professor's exact question shape) or `classic`; short questions carry `marks`, `shape`, `verdict` and point-form `points`; new top-level keys `top30`, `mock`, `recall`.
+- **Professor's style toggle** (Home, Study, Random, Review, Shorts): default shows only `osinga-style` items; "All questions" adds the classic bank. Study runs highest-probability first and shows the score chip and a tip.
+- **Top-30 cards** (`#/top30`): flip cards for the 30 most likely short questions, with "I know it / Revisit" saved per profile.
+- **Paper mock** (`#/papermock`): 25 MCQ + 12 short questions in the exam format, 3-hour countdown, MCQs auto-marked, short answers self-graded 0–marks against the model points, results saved per profile.
+- **Last-day checklist** now reads the ten recall lists from the content file (includes S10) plus exam tactics from the professor's sample questions.
+- **Shuffling** keeps a "None of the above" option in last place and remaps the correct answer.
+- **Store schema v3** (migrates v1/v2 profiles automatically; adds `cardStatus`, `paperMocks`, `settings.osingaOnly`); PWA cache id bumped so phones pick up the new content.
+
+### Push the update (Vercel redeploys automatically)
+
+From the `quiz` folder on your laptop (after copying in the updated files):
+
+```
+git add .
+git commit -m "v2: Session 10, professor-style bank, Top-30 cards, paper mock"
+git push
+```
+
+If the phone still shows the old questions after the deploy, close the app fully and reopen it once (the new service worker takes over on the second load).
+
 ## Deploy in 5 clicks (GitHub → Vercel)
 
 1. Create an empty repository on GitHub (e.g. `mktg644-exam-prep-quiz`).
